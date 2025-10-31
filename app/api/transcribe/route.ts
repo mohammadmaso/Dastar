@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { saveAudioFile, getSettings } from "@/lib/db";
 import { nanoid } from "nanoid";
 
 export const maxDuration = 60;
@@ -8,15 +7,23 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const audioFile = formData.get("audio") as File;
+    const settingsStr = formData.get("settings") as string | null;
 
     if (!audioFile) {
       return NextResponse.json({ error: "No audio file provided" }, { status: 400 });
     }
 
-    // Get settings for custom base URL and API key
-    const settings = await getSettings();
+    // Parse settings from form data
+    const settings = settingsStr ? JSON.parse(settingsStr) : null;
     const baseURL = settings?.openaiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
     const apiKey = settings?.openaiApiKey || process.env.OPENAI_API_KEY || "";
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured. Please add it in Settings." },
+        { status: 400 }
+      );
+    }
 
     // Convert audio to base64 for OpenAI Whisper API
     const arrayBuffer = await audioFile.arrayBuffer();
@@ -49,20 +56,12 @@ export async function POST(req: Request) {
     const data = await response.json();
     const transcript = data.text || "";
 
-    // Save audio metadata to IndexedDB
-    const audioId = nanoid();
-    await saveAudioFile({
-      id: audioId,
-      fileId: audioId,
-      filePath: `audio/${audioId}.webm`,
-      transcript,
-      duration: 0, // We don't have duration from this API
-      createdAt: Date.now(),
-    });
+    // Note: Audio metadata should be saved client-side to IndexedDB
+    // The server just returns the transcript
 
     return NextResponse.json({
       transcript,
-      audioId,
+      audioId: nanoid(),
       duration: 0,
     });
   } catch (error) {

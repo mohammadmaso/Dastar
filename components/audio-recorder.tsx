@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAppStore } from "@/lib/store";
 
 interface AudioRecorderProps {
   onTranscript: (transcript: string, audioBlob: Blob) => void;
@@ -11,6 +12,7 @@ interface AudioRecorderProps {
 }
 
 export function AudioRecorder({ onTranscript, disabled }: AudioRecorderProps) {
+  const { settings } = useAppStore();
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -21,6 +23,12 @@ export function AudioRecorder({ onTranscript, disabled }: AudioRecorderProps) {
 
   const startRecording = useCallback(async () => {
     try {
+      // Check if running in browser
+      if (typeof window === 'undefined' || !navigator.mediaDevices) {
+        alert('Media devices not available');
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
 
@@ -40,22 +48,40 @@ export function AudioRecorder({ onTranscript, disabled }: AudioRecorderProps) {
         // Send to transcription API
         setIsProcessing(true);
         try {
+          // Try server-side API first
           const formData = new FormData();
           formData.append("audio", audioBlob, "recording.webm");
+          if (settings) {
+            formData.append("settings", JSON.stringify(settings));
+          }
 
           const response = await fetch("/api/transcribe", {
             method: "POST",
             body: formData,
           });
 
-          if (!response.ok) throw new Error("Transcription failed");
-
-          const data = await response.json();
-          onTranscript(data.transcript, audioBlob);
+          if (response.ok) {
+            const data = await response.json();
+            onTranscript(data.transcript, audioBlob);
+          } else if (response.status === 404) {
+            // API route not available, use client-side transcription
+            const { transcribeAudio } = await import("@/lib/client-ai");
+            const transcript = await transcribeAudio(audioBlob);
+            onTranscript(transcript, audioBlob);
+          } else {
+            throw new Error("Transcription failed");
+          }
         } catch (error) {
           console.error("Transcription error:", error);
-          // Fallback: just send empty transcript
-          onTranscript("", audioBlob);
+          // Try client-side as fallback
+          try {
+            const { transcribeAudio } = await import("@/lib/client-ai");
+            const transcript = await transcribeAudio(audioBlob);
+            onTranscript(transcript, audioBlob);
+          } catch (clientError) {
+            console.error("Client-side transcription error:", clientError);
+            onTranscript("", audioBlob);
+          }
         } finally {
           setIsProcessing(false);
           setDuration(0);

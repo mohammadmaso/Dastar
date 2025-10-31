@@ -1,16 +1,21 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { getSettings } from "@/lib/db";
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const { messages, settings } = await req.json();
 
-  // Get settings for custom base URL and API key
-  const settings = await getSettings();
+  // Use settings from request body (client provides them) or fall back to env vars
   const baseURL = settings?.openaiBaseUrl || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
   const apiKey = settings?.openaiApiKey || process.env.OPENAI_API_KEY || "";
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: "OpenAI API key not configured. Please add it in Settings." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   // Create OpenAI client with custom base URL
   const openai = createOpenAI({

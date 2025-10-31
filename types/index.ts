@@ -42,3 +42,10 @@ export interface Directory {
   parentId?: string;
   createdAt: number;
 }
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: number;
+}

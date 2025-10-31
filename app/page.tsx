@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AudioRecorder } from "@/components/audio-recorder";
 import { FileSystemConnect } from "@/components/file-system-connect";
+import { ApiKeyReminder } from "@/components/api-key-reminder";
+import { useAppStore } from "@/lib/store";
 
 type Message = {
   id: string;
@@ -17,6 +19,7 @@ type Message = {
 };
 
 export default function Home() {
+  const { settings } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,46 +39,95 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to get response");
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantContent = "";
-
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: "",
       };
-
       setMessages((prev) => [...prev, assistantMessage]);
 
-      while (reader) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      const messageList = [...messages, userMessage].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-        const chunk = decoder.decode(value);
-        assistantContent += chunk;
+      // Try server-side API first
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: messageList, settings }),
+      });
 
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMessage.id ? { ...m, content: assistantContent } : m
-          )
-        );
+      if (response.ok) {
+        // Server-side API available
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let assistantContent = "";
+
+        while (reader) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          assistantContent += chunk;
+
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessage.id ? { ...m, content: assistantContent } : m
+            )
+          );
+        }
+      } else if (response.status === 404) {
+        // API route not available, use client-side AI
+        const { streamChatCompletion } = await import("@/lib/client-ai");
+        let assistantContent = "";
+
+        for await (const chunk of streamChatCompletion(messageList)) {
+          assistantContent += chunk;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessage.id ? { ...m, content: assistantContent } : m
+            )
+          );
+        }
+      } else {
+        throw new Error("Failed to get response");
       }
     } catch (error) {
       console.error("Chat error:", error);
+      // Try client-side as fallback
+      try {
+        const { streamChatCompletion } = await import("@/lib/client-ai");
+        const messageList = [...messages, userMessage].map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "",
+        };
+
+        let assistantContent = "";
+        for await (const chunk of streamChatCompletion(messageList)) {
+          assistantContent += chunk;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessage.id ? { ...m, content: assistantContent } : m
+            )
+          );
+        }
+      } catch (clientError) {
+        console.error("Client-side AI error:", clientError);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === (Date.now() + 1).toString()
+              ? { ...m, content: "Error: " + (clientError as Error).message }
+              : m
+          )
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +161,7 @@ export default function Home() {
       {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-6 md:px-6">
         <div className="mx-auto max-w-3xl space-y-4">
+          <ApiKeyReminder />
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center space-y-4 text-center">
               <div className="rounded-full bg-gray-100 p-6">
