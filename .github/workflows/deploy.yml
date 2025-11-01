@@ -34,6 +34,9 @@ jobs:
         with:
           version: latest
 
+      - name: Add pnpm to PATH
+        run: echo "$(pnpm bin)" >> $GITHUB_PATH
+
       - name: Install dependencies
         run: pnpm install
 
