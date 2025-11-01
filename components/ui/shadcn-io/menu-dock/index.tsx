@@ -19,6 +19,7 @@ export interface MenuDockProps {
   orientation?: 'horizontal' | 'vertical';
   showLabels?: boolean;
   animated?: boolean;
+  activeIndex?: number;
 }
 
 const defaultItems: MenuDockItem[] = [
@@ -35,7 +36,8 @@ export const MenuDock: React.FC<MenuDockProps> = ({
   variant = 'default',
   orientation = 'horizontal',
   showLabels = true,
-  animated = true
+  animated = true,
+  activeIndex: propActiveIndex
 }) => {
 
   const finalItems = useMemo(() => {
@@ -47,12 +49,18 @@ export const MenuDock: React.FC<MenuDockProps> = ({
      return items;
   }, [items]);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(propActiveIndex ?? 0);
   const [underlineWidth, setUnderlineWidth] = useState(0);
   const [underlineLeft, setUnderlineLeft] = useState(0);
   
   const textRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (propActiveIndex !== undefined) {
+      setActiveIndex(propActiveIndex);
+    }
+  }, [propActiveIndex]);
 
   useEffect(() => {
       if (activeIndex >= finalItems.length) {
@@ -137,7 +145,7 @@ export const MenuDock: React.FC<MenuDockProps> = ({
               'relative flex flex-col items-center justify-center rounded-lg transition-all duration-200',
               'hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               styles.item,
-              isActive && 'text-primary',
+              isActive && 'text-amber-700 transition-transform scale-120 duration-200 ease-out',
               !isActive && 'text-muted-foreground hover:text-foreground'
             )}
             onClick={() => handleItemClick(index, item)}
@@ -146,11 +154,11 @@ export const MenuDock: React.FC<MenuDockProps> = ({
           >
             <div className={cn(
               'flex items-center justify-center transition-all duration-200',
-              animated && isActive && 'animate-bounce',
+              animated && isActive && 'animate-bounce scale-110',
               orientation === 'horizontal' && showLabels ? 'mb-1' : '',
               orientation === 'vertical' && showLabels ? 'mb-1' : ''
             )}>
-              <IconComponent className={cn(styles.icon, 'transition-colors duration-200')} />
+              <IconComponent className={cn(styles.icon, 'transition-colors duration-200', isActive && 'text-primary')} />
             </div>
             
             {showLabels && (
