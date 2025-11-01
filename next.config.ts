@@ -11,9 +11,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Note: Removed 'output: export' because this is a fully client-side app
-  // that uses IndexedDB and dynamic routes. For deployment, use a platform
-  // that supports client-side routing (Vercel, Netlify, etc.)
+  // Static export for GitHub Pages
+  output: "export",
   trailingSlash: true,
 };
 
