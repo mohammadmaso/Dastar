@@ -3,17 +3,10 @@ import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   turbopack: {},
-  // GitHub Pages deployment requires basePath if not using custom domain
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
-  // Asset prefix for GitHub Pages
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
-  // Enable image optimization (required for production)
+  // Enable image optimization
   images: {
-    unoptimized: true,
+    unoptimized: true, // Can be set to false if deploying to Vercel
   },
-  // Static export for GitHub Pages
-  output: "export",
-  trailingSlash: true,
 };
 
 export default withPWA({
