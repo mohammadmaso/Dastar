@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true, // Required for static export if using `output: 'export'`
   },
+  // Enable static export for GitHub Pages
+  output: 'export',
+  // Disable server-side features for static export
+  trailingSlash: true,
 };
 
 export default withPWA({
