@@ -79,11 +79,15 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
 
         mediaRecorder.onstop = async () => {
           const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
-          
+
+          // Cleanup stream immediately
           if (streamRef.current) {
             streamRef.current.getTracks().forEach((track) => track.stop());
             streamRef.current = null;
           }
+
+          // Reset mic state
+          setIsMicEnabled(false);
 
           // Send to transcription API
           setIsProcessing(true);
@@ -124,7 +128,26 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
             }
           } finally {
             setIsProcessing(false);
+            // Ensure cleanup
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach((track) => track.stop());
+              streamRef.current = null;
+            }
+            if (mediaRecorderRef.current) {
+              mediaRecorderRef.current = null;
+            }
           }
+        };
+
+        mediaRecorder.onerror = (error) => {
+          console.error("MediaRecorder error:", error);
+          // Cleanup on error
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+          }
+          setIsMicEnabled(false);
+          setIsProcessing(false);
         };
 
         mediaRecorder.start();
@@ -132,6 +155,13 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
       } catch (error) {
         console.error("Error accessing microphone:", error);
         alert("Could not access microphone. Please grant permission.");
+        // Cleanup on error
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
+        setIsMicEnabled(false);
+        setIsProcessing(false);
       }
     }
   }, [isMicEnabled, disabled, isProcessing, selectedMic, onTranscript, settings]);

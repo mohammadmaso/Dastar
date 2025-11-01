@@ -67,8 +67,8 @@ export function FileCreationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white text-gray-900">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] bg-white text-gray-900 flex flex-col p-0">
+        <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6 shrink-0">
           <DialogTitle className="flex items-center gap-2 text-gray-900">
             <FileText className="h-5 w-5 text-blue-600" />
             {action} Markdown File
@@ -78,7 +78,7 @@ export function FileCreationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto px-4 sm:px-6 flex-1">
           {/* Reasoning */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs font-semibold text-blue-900 mb-1">AI Analysis</p>
@@ -223,7 +223,7 @@ export function FileCreationDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex gap-2 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 border-t shrink-0 mt-auto">
           <Button
             variant="outline"
             onClick={handleReject}

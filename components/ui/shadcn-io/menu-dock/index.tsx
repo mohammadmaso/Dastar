@@ -100,23 +100,23 @@ export const MenuDock: React.FC<MenuDockProps> = ({
       case 'compact':
         return {
           container: 'p-1',
-          item: 'p-2 min-w-12',
+          item: 'p-1 sm:p-2',
           icon: 'h-4 w-4',
-          text: 'text-xs'
+          text: 'text-[10px] sm:text-xs'
         };
       case 'large':
         return {
           container: 'p-3',
-          item: 'p-3 min-w-16',
-          icon: 'h-6 w-6',
-          text: 'text-base'
+          item: 'p-2 sm:p-3',
+          icon: 'h-5 w-5 sm:h-6 sm:w-6',
+          text: 'text-sm sm:text-base'
         };
       default:
         return {
-          container: 'p-2',
-          item: 'p-2 min-w-14',
-          icon: 'h-5 w-5',
-          text: 'text-sm'
+          container: 'p-1 sm:p-2',
+          item: 'p-1 sm:p-2',
+          icon: 'h-4 w-4 sm:h-5 sm:w-5',
+          text: 'text-[10px] sm:text-sm'
         };
     }
   };

@@ -293,11 +293,11 @@ function HomePage() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-4 py-3 md:px-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">Dastar Assistant</h1>
-            <p className="text-sm text-gray-600">
+      <div className="border-b border-gray-200 bg-white px-3 py-2 sm:px-4 sm:py-3 md:px-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base sm:text-xl font-semibold truncate">Dastar Assistant</h1>
+            <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">
               Chat with your AI assistant to manage notes and files
             </p>
           </div>

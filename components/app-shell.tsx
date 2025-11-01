@@ -64,10 +64,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom navigation */}
-      <nav className="border-t border-gray-200 bg-white px-4 py-2 md:px-8">
+      <nav className="border-t border-gray-200 bg-white px-1 py-1 sm:px-4 sm:py-2 md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-center">
-          <MenuDock 
-            items={menuItems} 
+          <MenuDock
+            items={menuItems}
             variant="default"
             orientation="horizontal"
             showLabels={true}

@@ -81,25 +81,38 @@ EXISTING FILES (with summaries):
 ${filesSummary.length > 0 ? JSON.stringify(filesSummary.slice(0, 20), null, 2) : "No files yet"}
 
 TASK:
-1. Analyze if this message contains information worth saving
+1. Analyze if this message contains SUBSTANTIAL information worth saving (not just casual chat)
 2. Search for related existing directories and files
 3. Decide whether to:
-   - CREATE a new file in an existing directory
-   - CREATE a new file in a NEW directory (if topic is unrelated to existing ones)
-   - UPDATE an existing file
-4. Suggest appropriate directory name and file name
+   - CREATE a new file in an existing directory (STRONGLY PREFERRED)
+   - CREATE a new file in a NEW directory (ONLY if topic is completely unrelated to all existing directories)
+   - UPDATE an existing file (if very similar content exists)
+   - DO NOTHING if content is trivial, conversational, or already covered
+4. Suggest appropriate directory name (prefer existing, be abstract) and file name
 5. Generate a summary and markdown content
 
+IMPORTANT GUIDELINES:
+- Only suggest file creation for substantial, meaningful content
+- STRONGLY prefer existing directories - be creative in fitting content into existing categories
+- Only create new directories for major new topic areas (e.g., "recipes" when only "projects" exists)
+- Use abstract, broad directory names that can accommodate multiple related files
+- Set confidence LOW (0.3-0.5) for casual conversation or minor information
+- Set confidence HIGH (0.8-1.0) only for substantial, well-organized content
+
 DIRECTORY NAMING GUIDELINES:
+- MUST use English words ONLY (no Persian, Arabic, or other languages)
 - Use clear, descriptive names (e.g., "project-alpha", "meeting-notes", "ideas")
 - Prefer existing directories if content is related
-- Create new directories for new topics/projects
+- Create new directories ONLY when absolutely necessary for distinct topics
 - Use lowercase with hyphens
+- Be abstract and general (e.g., "projects" not "project-a", "project-b", "project-c")
 
 FILE NAMING GUIDELINES:
+- MUST use English words ONLY (no Persian, Arabic, or other languages)
 - Descriptive but concise
 - Include date if time-sensitive (e.g., "meeting-2025-11-01.md")
 - Use lowercase with hyphens
+- Translate non-English content titles to English equivalents
 
 Respond in JSON format:
 {
@@ -130,7 +143,7 @@ Respond in JSON format:
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that analyzes messages and intelligently organizes files into directories. Always respond with valid JSON only.",
+            content: "You are a helpful assistant that analyzes messages and intelligently organizes files into directories. CRITICAL: All directory and file names MUST be in English only, using lowercase with hyphens. Be conservative about creating new directories - prefer existing ones. Always respond with valid JSON only.",
           },
           {
             role: "user",
@@ -168,7 +181,8 @@ Respond in JSON format:
     }
 
     // Only return if confidence is high enough and action is warranted
-    if (result.confidence > 0.6 && (result.shouldCreateFile || result.shouldUpdateFile)) {
+    // Increased threshold to be more conservative
+    if (result.confidence > 0.7 && (result.shouldCreateFile || result.shouldUpdateFile)) {
       return result;
     }
 
