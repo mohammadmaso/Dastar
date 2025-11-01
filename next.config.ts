@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  turbopack: {
+    root: __dirname,
+  },
   // GitHub Pages deployment requires basePath if not using custom domain
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
   // Asset prefix for GitHub Pages
