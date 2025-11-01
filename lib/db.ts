@@ -5,6 +5,7 @@ import type {
   LinkRelation,
   AppSettings,
   Directory,
+  ChatMessage,
 } from "@/types";
 
 interface DastarDB extends DBSchema {
@@ -38,6 +39,13 @@ interface DastarDB extends DBSchema {
       "by-parentId": string;
     };
   };
+  chatMessages: {
+    key: string;
+    value: ChatMessage;
+    indexes: {
+      "by-createdAt": number;
+    };
+  };
   settings: {
     key: string;
     value: AppSettings;
@@ -45,7 +53,7 @@ interface DastarDB extends DBSchema {
 }
 
 const DB_NAME = "dastar-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<DastarDB>> | null = null;
 
@@ -87,6 +95,14 @@ export function getDB(): Promise<IDBPDatabase<DastarDB>> {
           });
           dirStore.createIndex("by-path", "path", { unique: true });
           dirStore.createIndex("by-parentId", "parentId");
+        }
+
+        // Chat messages store
+        if (!db.objectStoreNames.contains("chatMessages")) {
+          const chatStore = db.createObjectStore("chatMessages", {
+            keyPath: "id",
+          });
+          chatStore.createIndex("by-createdAt", "createdAt");
         }
 
         // Settings store
@@ -228,4 +244,48 @@ export async function initializeDefaultSettings(): Promise<void> {
       theme: "light",
     });
   }
+}
+
+// Chat message operations
+export async function getAllChatMessages(): Promise<ChatMessage[]> {
+  const db = await getDB();
+  const messages = await db.getAllFromIndex("chatMessages", "by-createdAt");
+  return messages;
+}
+
+export async function getChatMessages(limit: number = 50, offset: number = 0): Promise<ChatMessage[]> {
+  const db = await getDB();
+  const tx = db.transaction("chatMessages", "readonly");
+  const index = tx.store.index("by-createdAt");
+
+  let messages: ChatMessage[] = [];
+  let cursor = await index.openCursor(null, "prev"); // Newest first
+  let skipped = 0;
+
+  while (cursor && messages.length < limit) {
+    if (skipped >= offset) {
+      messages.push(cursor.value);
+    } else {
+      skipped++;
+    }
+    cursor = await cursor.continue();
+  }
+
+  await tx.done;
+  return messages.reverse(); // Return in chronological order
+}
+
+export async function saveChatMessage(message: ChatMessage): Promise<void> {
+  const db = await getDB();
+  await db.put("chatMessages", message);
+}
+
+export async function deleteChatMessage(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete("chatMessages", id);
+}
+
+export async function deleteAllChatMessages(): Promise<void> {
+  const db = await getDB();
+  await db.clear("chatMessages");
 }

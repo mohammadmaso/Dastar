@@ -20,6 +20,7 @@ export default function SettingsPage() {
     ttsVoice: "alloy",
     sttModel: "whisper-1",
     theme: "light",
+    autoCreateFiles: false,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -35,13 +36,14 @@ export default function SettingsPage() {
           ttsVoice: savedSettings.ttsVoice || "alloy",
           sttModel: savedSettings.sttModel || "whisper-1",
           theme: savedSettings.theme || "light",
+          autoCreateFiles: savedSettings.autoCreateFiles ?? false,
         });
       }
     };
     loadSettings();
   }, [settings]);
 
-  const handleChange = (field: keyof AppSettings, value: string) => {
+  const handleChange = (field: keyof AppSettings, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setSaveMessage("");
   };
@@ -59,6 +61,7 @@ export default function SettingsPage() {
         ttsVoice: formData.ttsVoice,
         sttModel: formData.sttModel,
         theme: (formData.theme as "light" | "dark") || "light",
+        autoCreateFiles: formData.autoCreateFiles ?? false,
       };
 
       await saveSettings(settingsToSave);
@@ -194,6 +197,30 @@ export default function SettingsPage() {
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
+            </div>
+          </Card>
+
+          {/* File Creation Settings */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Intelligent File Creation</h2>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="autoCreateFiles"
+                  checked={!formData.autoCreateFiles}
+                  onChange={(e) => handleChange("autoCreateFiles", !e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="autoCreateFiles" className="cursor-pointer">
+                    Always ask before creating files
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    When enabled, you'll be asked to confirm before AI creates markdown files from your conversations. When disabled, files will be created automatically.
+                  </p>
+                </div>
+              </div>
             </div>
           </Card>
 

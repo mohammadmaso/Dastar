@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+@import "@pipecat-ai/voice-ui-kit/styles.scoped";
+
+
 @theme {
   --color-background: 0 0% 100%;
   --color-foreground: 0 0% 3.9%;

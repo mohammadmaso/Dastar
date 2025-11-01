@@ -43,7 +43,7 @@
 - MAstra text to speech (https://mastra.ai/docs/voice/text-to-speech)
 - MAstra speech to text (https://mastra.ai/docs/voice/speech-to-text)
 
-- UserAudioControl component from @pipecat-ai/voice-ui-kit  for record button (use Web Audio API for advanced audio processing)
+  - UserAudioControl component from @pipecat-ai/voice-ui-kit  for record button (use Web Audio API for advanced audio processing)
 
 -  OpenAI Whisper (for transcription) after user end each recording (queue management needed)
 

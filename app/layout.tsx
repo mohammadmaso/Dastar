@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { DbInitializer } from "@/components/db-initializer";
 import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "Dastar - Personal Assistant",
@@ -32,8 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <DbInitializer />
-        <AppShell>{children}</AppShell>
+        <Providers>
+          <DbInitializer />
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

@@ -33,6 +33,7 @@ export interface AppSettings {
   ttsVoice?: string;
   sttModel?: string;
   theme?: "light" | "dark";
+  autoCreateFiles?: boolean; // If false, always ask before creating files
 }
 
 export interface Directory {
@@ -48,4 +49,5 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   createdAt: number;
+  isCheckpoint?: boolean; // Marks this message as a checkpoint - only messages after this are sent to AI
 }

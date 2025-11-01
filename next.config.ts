@@ -9,11 +9,11 @@ const nextConfig: NextConfig = {
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
   // Enable image optimization (required for production)
   images: {
-    unoptimized: true, // Required for static export if using `output: 'export'`
+    unoptimized: true,
   },
-  // Enable static export for GitHub Pages
-  output: 'export',
-  // Disable server-side features for static export
+  // Note: Removed 'output: export' because this is a fully client-side app
+  // that uses IndexedDB and dynamic routes. For deployment, use a platform
+  // that supports client-side routing (Vercel, Netlify, etc.)
   trailingSlash: true,
 };
 
