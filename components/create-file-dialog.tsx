@@ -100,17 +100,17 @@ export function CreateFileDialog() {
           New File
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="bg-white">
         <DialogHeader>
-          <DialogTitle>Create New File</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-gray-900">Create New File</DialogTitle>
+          <DialogDescription className="text-gray-600">
             Create a new markdown file in your notes.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">File Name</label>
+            <label className="text-sm font-medium text-gray-900">File Name</label>
             <Input
               placeholder="my-note.md"
               value={name}
@@ -122,7 +122,7 @@ export function CreateFileDialog() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Path (optional)</label>
+            <label className="text-sm font-medium text-gray-900">Path (optional)</label>
             <Input
               placeholder="projects/work"
               value={path}
@@ -134,7 +134,7 @@ export function CreateFileDialog() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Summary (optional)</label>
+            <label className="text-sm font-medium text-gray-900">Summary (optional)</label>
             <Input
               placeholder="Brief description..."
               value={summary}

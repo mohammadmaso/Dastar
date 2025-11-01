@@ -41,22 +41,22 @@ jobs:
 
       - name: Update next.config.ts for static export
         run: |
-          cat > next.config.ts << 'EOF'
-          import type { NextConfig } from "next";
+          cat > next.config.mjs << 'EOF'
           import withPWA from "@ducanh2912/next-pwa";
 
-          const nextConfig: NextConfig = {
+          const nextConfig = {
             output: 'export',
             basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
             assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
             images: {
               unoptimized: true,
             },
+            trailingSlash: true,
           };
 
           export default withPWA({
             dest: "public",
-            disable: true, // Disable PWA for static export
+            disable: true,
           })(nextConfig);
           EOF
 
@@ -64,6 +64,17 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "./out" ]; then
+            echo "Error: ./out directory does not exist after build"
+            echo "Build may have failed. Checking for .next directory..."
+            ls -la
+            exit 1
+          fi
+          echo "Build output directory exists"
+          ls -la ./out
 
       - name: Add .nojekyll file
         run: touch ./out/.nojekyll

@@ -1,7 +1,16 @@
 import { Mastra } from "@mastra/core";
 import { Agent } from "@mastra/core/agent";
-import { openai } from "@ai-sdk/openai";
+import { openai, createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
+import {
+  getAllMarkdownFiles,
+  getMarkdownFileByPath,
+  saveMarkdownFile,
+  saveDirectory,
+  getDirectoryByPath,
+} from "@/lib/db";
+import { nanoid } from "nanoid";
+import type { MarkdownFile } from "@/types";
 
 // Initialize Mastra instance
 export const mastra = new Mastra({
@@ -15,8 +24,16 @@ const getMarkdownFilesListTool = {
   description: "Get a list of all markdown files with their summaries",
   inputSchema: z.object({}),
   execute: async () => {
-    // This will be implemented to fetch from IndexedDB
-    return { files: [] };
+    const files = await getAllMarkdownFiles();
+    return {
+      files: files.map((f) => ({
+        id: f.id,
+        path: f.path,
+        name: f.name,
+        summary: f.summary,
+        updatedAt: f.updatedAt,
+      })),
+    };
   },
 };
 
@@ -27,8 +44,11 @@ const getMarkdownFileContentTool = {
     path: z.string().describe("The path of the markdown file to retrieve"),
   }),
   execute: async ({ path }: { path: string }) => {
-    // This will be implemented to fetch from IndexedDB
-    return { path, content: "" };
+    const file = await getMarkdownFileByPath(path);
+    if (!file) {
+      return { path, content: null, error: "File not found" };
+    }
+    return { path, content: file.content, summary: file.summary };
   },
 };
 
@@ -49,8 +69,22 @@ const updateMarkdownFileTool = {
     content: string;
     summary: string;
   }) => {
-    // This will be implemented to save to IndexedDB and File System
-    return { success: true, path, summary };
+    const existingFile = await getMarkdownFileByPath(path);
+    const fileName = path.split("/").pop() || path;
+
+    const fileData: MarkdownFile = {
+      id: existingFile?.id || nanoid(),
+      path,
+      name: fileName,
+      content,
+      summary,
+      createdAt: existingFile?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+      tags: existingFile?.tags || [],
+    };
+
+    await saveMarkdownFile(fileData);
+    return { success: true, path, summary, id: fileData.id };
   },
 };
 
@@ -61,7 +95,23 @@ const createDirectoryTool = {
     path: z.string().describe("The path of the directory to create"),
   }),
   execute: async ({ path }: { path: string }) => {
-    // This will be implemented to create in File System
+    const pathParts = path.trim().split("/").filter(Boolean);
+    let currentPath = "";
+
+    for (const part of pathParts) {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      const existing = await getDirectoryByPath(currentPath);
+
+      if (!existing) {
+        await saveDirectory({
+          id: nanoid(),
+          name: part,
+          path: currentPath,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
     return { success: true, path };
   },
 };
@@ -99,6 +149,38 @@ Remember to:
     createDirectory: createDirectoryTool,
   },
 });
+
+// Factory function to create agent with custom OpenAI config
+export function createMarkdownAssistant(baseURL?: string, apiKey?: string) {
+  let model;
+
+  if (baseURL && apiKey) {
+    const customOpenAI = createOpenAI({ baseURL, apiKey });
+    model = customOpenAI("gpt-4-turbo");
+  } else {
+    model = openai("gpt-4-turbo");
+  }
+
+  return new Agent({
+    name: "Markdown Assistant",
+    instructions: `You are a helpful assistant that helps users organize their thoughts and notes into markdown files.
+
+You can help users:
+- Create and organize markdown files
+- Generate summaries of their content
+- Suggest appropriate file and directory structures
+- Link related notes together
+
+When a user asks you to create or update files, describe what you would do and ask for confirmation.`,
+    model,
+    tools: {
+      getMarkdownFilesList: getMarkdownFilesListTool,
+      getMarkdownFileContent: getMarkdownFileContentTool,
+      updateMarkdownFile: updateMarkdownFileTool,
+      createDirectory: createDirectoryTool,
+    },
+  });
+}
 
 // Export the agent for use in API routes
 export default markdownAssistant;
