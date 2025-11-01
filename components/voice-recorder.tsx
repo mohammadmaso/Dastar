@@ -128,11 +128,7 @@ export function VoiceRecorder({ onTranscript, disabled }: VoiceRecorderProps) {
             }
           } finally {
             setIsProcessing(false);
-            // Ensure cleanup
-            if (streamRef.current) {
-              streamRef.current.getTracks().forEach((track) => track.stop());
-              streamRef.current = null;
-            }
+            // Ensure recorder cleanup
             if (mediaRecorderRef.current) {
               mediaRecorderRef.current = null;
             }
