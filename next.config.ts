@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   // Note: Removed 'output: export' because this is a fully client-side app
   // that uses IndexedDB and dynamic routes. For deployment, use a platform
   // that supports client-side routing (Vercel, Netlify, etc.)
+  output: "export",
   trailingSlash: true,
 };
 
